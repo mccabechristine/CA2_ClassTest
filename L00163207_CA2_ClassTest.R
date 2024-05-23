@@ -22,11 +22,14 @@
 
 # Create the data frame
 # Load necessary libraries
+# Load necessary libraries
 library(readxl)
 library(ggplot2)
 library(car)
-library(MASS)
 library(psych)
+library(e1071)
+library(nortest)
+library(MASS)
 
 # Load the dataset
 bodyfat <- "Dataset_2024.xlsx"
@@ -250,3 +253,77 @@ print(bodyfat_outliers)
 bodyfat_cleaned <- bodyfat[!(bodyfat$Body_Fat < (quantile(bodyfat$Body_Fat, 0.25) - 1.5 * IQR(bodyfat$Body_Fat)) | 
                                bodyfat$Body_Fat > (quantile(bodyfat$Body_Fat, 0.75) + 1.5 * IQR(bodyfat$Body_Fat))), ]
 
+# Function to plot histogram, Q-Q plot, and boxplot, and calculate skewness
+plot_normality <- function(df, column) {
+  par(mfrow = c(2, 2))
+  
+  # Histogram
+  hist(df[[column]], main = paste("Histogram of", column), xlab = column, col = "lightblue", border = "black")
+  
+  # Q-Q plot
+  qqPlot(df[[column]], main = paste("Q-Q Plot of", column), ylab = column)
+  
+  # Boxplot
+  boxplot(df[[column]], main = paste("Boxplot of", column), ylab = column)
+  
+  # Skewness
+  skew <- skewness(df[[column]])
+  print(paste("Skewness of", column, ":", skew))
+}
+
+# Plot normality for each variable
+plot_normality(bodyfat, "Age")
+plot_normality(bodyfat, "Body_Fat")
+plot_normality(bodyfat, "Chest")
+plot_normality(bodyfat, "Density")
+plot_normality(bodyfat, "Knee")
+plot_normality(bodyfat, "Weight")
+
+# Shapiro-Wilk test for normality
+normality_test <- function(df, column) {
+  shapiro_test <- shapiro.test(df[[column]])
+  print(paste("Shapiro-Wilk test for", column, ":", "W =", shapiro_test$statistic, "p-value =", shapiro_test$p.value))
+}
+
+# Perform Shapiro-Wilk test for each variable
+normality_test(bodyfat, "Age")
+normality_test(bodyfat, "Body_Fat")
+normality_test(bodyfat, "Chest")
+normality_test(bodyfat, "Density")
+normality_test(bodyfat, "Knee")
+normality_test(bodyfat, "Weight")
+
+# Develop the full model
+full_model <- lm(Body_Fat ~ Age + Chest + Density + Knee + Weight, data = bodyfat)
+
+# Display the summary of the full model
+summary(full_model)
+
+# Calculate VIF for each predictor
+vif_values <- vif(full_model)
+vif_values
+
+# Stepwise selection based on AIC to get the final model
+step_model <- stepAIC(full_model, direction = "both")
+summary(step_model)
+
+# AIC and BIC for the full model
+full_model_aic <- AIC(full_model)
+full_model_bic <- BIC(full_model)
+
+# AIC and BIC for the final model
+final_model_aic <- AIC(step_model)
+final_model_bic <- BIC(step_model)
+
+# Print the results
+print(paste("Full Model AIC:", full_model_aic))
+print(paste("Full Model BIC:", full_model_bic))
+print(paste("Final Model AIC:", final_model_aic))
+print(paste("Final Model BIC:", final_model_bic))
+
+# Full Model AIC: 824.23
+# Full Model BIC: 847.45
+# Final Model AIC: 822.17
+# Final Model BIC: 835.61
+
+# The final model has lower AIC and BIC values compared to the full model, suggesting that the final model provides a better fit to the data while also being more parsimonious.
