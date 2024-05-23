@@ -22,7 +22,6 @@
 
 # Create the data frame
 # Load necessary libraries
-# Load necessary libraries
 library(readxl)
 library(ggplot2)
 library(car)
@@ -47,12 +46,6 @@ str(data)
 head(data)
 
 # Data Preprocessing
-Data preprocessing is an essential step in ensuring the quality and reliability of the analysis. It involves the following steps:
-  
-  Loading the dataset: The dataset is loaded from an Excel file.
-Checking for missing values: Identifying any missing values in the dataset.
-Handling missing values: Removing or imputing missing values to ensure a complete dataset.
-Renaming variables: Renaming columns for easier reference and consistency.
 
 # Convert the dataset to a dataframe.  
 bodyfat <- as.data.frame(data)
